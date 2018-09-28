@@ -49,7 +49,7 @@ extern "C" {
 #include <carmen_utils/map_messages.h>
 #include "map3d.h"
 
-#include <lcmtypes/hr_lcmtypes.h>
+#include <lcmtypes/gridmap_lcmtypes.h>
 
 #define MAP_EPS 0.05
 #define MAP_FREE_VALUE 0

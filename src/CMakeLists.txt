@@ -21,7 +21,8 @@ pods_use_pkg_config_packages(map3d_interface
     lcm
     bot2-core
     lcmtypes_hr-lcmtypes
-    lcmtypes_obstacle-detector)
+    lcmtypes_obstacle-detector
+    lcmtypes_gridmap)
 
 target_link_libraries(map3d_interface
   -lcarmen-utils
@@ -39,15 +40,17 @@ set(mapserver_sources
   mapserver.c
   )
 
-add_executable(hr-mapserver ${mapserver_sources})
+add_executable(mapserver ${mapserver_sources})
 
-pods_use_pkg_config_packages(hr-mapserver
+pods_use_pkg_config_packages(mapserver
     gthread-2.0
     lcm
     bot2-core
     bot2-frames
     lcmtypes_hr-lcmtypes
     lcmtypes_obstacle-detector
+    lcmtypes_map
+    lcmtypes_gridmap
     path-utils)
 
-pods_install_executables(hr-mapserver)
+pods_install_executables(mapserver)

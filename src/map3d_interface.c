@@ -1,6 +1,5 @@
 #ifndef COMPILE_WITHOUT_MAP_SUPPORT
 #endif
-#include "map3d_interface.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -8,12 +7,14 @@
 
 #include <carmen_utils/carmen.h>
 
+#include "map3d_interface.h"
+
 #define DIV_PER_METER 10
 
 int CMi, CMj;
 static int map_type = 0;
 
-//this looks like a very weird method 
+//this looks like a very weird method
 ripl_gridmap_t * carmen3d_map_create_compressed_carmen3d_gridmap_t(float *complete_map, char * map_name, ripl_gridmap_t* gmappermap, double scale, double shift)
 {
   ripl_gridmap_t * lcm_msg = (ripl_gridmap_t *) calloc(1,sizeof(ripl_gridmap_t));
@@ -96,7 +97,7 @@ int convert_and_publish_map(carmen_map_p map_p, lcm_t *lcm, const char *name){
 
   lcm_msg.center.x = map_p->config.x_size/2* map_p->config.resolution;
   lcm_msg.center.y = map_p->config.y_size/2* map_p->config.resolution;
-  
+
   lcm_msg.type = 1;//CARMEN3D_MAP_GRID_MAP_TYPE_OCCUPANCY;
   lcm_msg.sizeX2 = map_p->config.x_size;
   lcm_msg.sizeY2 = map_p->config.y_size;
@@ -108,23 +109,23 @@ int convert_and_publish_map(carmen_map_p map_p, lcm_t *lcm, const char *name){
             map_p->map[i][j] = MAP_UNEXPLORED_VALUE;
     }
   }
-  
-  ripl_gridmap_t *to_pub  = carmen3d_map_create_compressed_carmen3d_gridmap_t(map_p->complete_map, 
+
+  ripl_gridmap_t *to_pub  = carmen3d_map_create_compressed_carmen3d_gridmap_t(map_p->complete_map,
 							      lcm_msg.config.map_name, &lcm_msg, 1, 0);
-  
-  //publish the map once when we load it  
-  //ripl_gridmap_t_publish(lcm, GMAPPER_GRIDMAP_CHANNEL, to_pub);    
-  ripl_gridmap_t_publish(lcm, "FINAL_SLAM", to_pub);  
+
+  //publish the map once when we load it
+  //ripl_gridmap_t_publish(lcm, GMAPPER_GRIDMAP_CHANNEL, to_pub);
+  ripl_gridmap_t_publish(lcm, "FINAL_SLAM", to_pub);
 
   ripl_multi_gridmap_t lcm_full_map_msg;
   //message that holds the multi-floor map
   lcm_full_map_msg.no_floors = 1;
-  lcm_full_map_msg.current_floor_ind = 0;  //this current floor is the index for the map 
+  lcm_full_map_msg.current_floor_ind = 0;  //this current floor is the index for the map
   lcm_full_map_msg.maps = (ripl_floor_gridmap_t *)malloc(1* sizeof(ripl_floor_gridmap_t));
-  memcpy(&lcm_full_map_msg.maps[0].gridmap, to_pub, sizeof(ripl_gridmap_t));    
+  memcpy(&lcm_full_map_msg.maps[0].gridmap, to_pub, sizeof(ripl_gridmap_t));
   lcm_full_map_msg.maps[0].floor_no = 1;
 
-  //for the multi-floor map   
+  //for the multi-floor map
   ripl_multi_gridmap_t_publish(lcm, "MULTI_FLOOR_MAPS", &lcm_full_map_msg);
 
 
@@ -191,7 +192,7 @@ void carmen3d_map_uncompress_lcm_map(ripl_map_t* new_map, const ripl_gridmap_t* 
   }
 }
 
-//map co-ord - where the map left corner is 0 
+//map co-ord - where the map left corner is 0
 carmen_point_t carmen3d_map_global_to_map_coordinates(carmen_point_t global_pt, ripl_map_t* map)
 {
   carmen_point_t map_pt;
@@ -201,7 +202,7 @@ carmen_point_t carmen3d_map_global_to_map_coordinates(carmen_point_t global_pt, 
   return map_pt;
 }
 
-//back to global co-ordinate set 
+//back to global co-ordinate set
 carmen_point_t carmen3d_map_map_to_global_coordinates(carmen_point_t map_pt, ripl_map_t* map)
 {
   carmen_point_t global_pt;
@@ -218,10 +219,10 @@ carmen_point_t carmen3d_map_map_to_global_coordinates(carmen_point_t map_pt, rip
 void carmen3d_map3d_global_to_map_index_coordinates(carmen_point_t global_pt, carmen_point_t map_midpt,
     carmen_point_t map_zero, double map_resoln, int *map_idx_x, int *map_idx_y)
 {
-    
+
      *map_idx_x = carmen_round((global_pt.x + map_midpt.x - map_zero.x) / map_resoln);
      *map_idx_y = carmen_round((global_pt.y + map_midpt.y - map_zero.y) / map_resoln);
-     
+
     //    *map_idx_x = floor((global_pt.x + map_midpt.x - map_zero.x) / map_resoln);
     //*map_idx_y = floor((global_pt.y + map_midpt.y - map_zero.y) / map_resoln);
 }
@@ -229,7 +230,7 @@ void carmen3d_map3d_global_to_map_index_coordinates(carmen_point_t global_pt, ca
 void carmen3d_map3d_map_index_to_global_coordinates(double *global_pt_x, double *global_pt_y, carmen_point_t map_midpt,
     carmen_point_t map_zero, double map_resoln, int map_idx_x, int map_idx_y)
 {
-    //this is not the cell center - this is the left bottom corner of the cell 
+    //this is not the cell center - this is the left bottom corner of the cell
     //    *global_pt_x = map_idx_x * map_resoln + map_zero.x - map_midpt.x;
     //*global_pt_y = map_idx_y * map_resoln + map_zero.y - map_midpt.y;
     *global_pt_x = map_idx_x * map_resoln + map_zero.x - map_midpt.x;// + map_resoln / 2.0;
@@ -271,5 +272,3 @@ carmen_inline void carmen3d_map3d_destroy_map(carmen3d_map3d_grid_map_p map)
   }
   free(map->map);
 }
-
-

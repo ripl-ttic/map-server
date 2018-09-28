@@ -21,8 +21,11 @@
 #include <opencv/cxcore.h>
 
 #include <path_utils/path_util.h>
+
+#include <lcmtypes/gridmap_lcmtypes.h>
 #include <lcmtypes/hr_lcmtypes.h>
-#include <lcmtypes/obs_lcmtypes.h>
+#include <lcmtypes/obstacle_detector_lcmtypes.h>
+#include <lcmtypes/map_lcmtypes.h>
 #include <hr_lcmtypes/lcm_channel_names.h>
 
 #define DIV_PER_METER 10
@@ -38,7 +41,7 @@ typedef struct
     ripl_multi_gridmap_t *multi_msg;
     ripl_tagged_node_list_t *tagged_places;
     ripl_gridmap_t *single_map;
-    ripl_elevator_list_t *elevator_list;
+    ripl_elevator_node_list_t *elevator_list;
     ripl_topology_t *topology_list;
     obs_rect_list_t *sim_rects;
     //ripl_gridmap_t **multi_maps;
@@ -176,31 +179,6 @@ void send_lcm_map(char *requesting_prog, state_t *s, int floor_no){
             //we should send an error message
         }
     }
-}
-
-//reinit the localizer
-void send_reinit(state_t *s)
-{
-    if(s->latest_pose==NULL){
-        fprintf(stderr,"Error : No Pose message\n");
-        return;
-    }
-
-    ripl_localize_reinitialize_cmd_t msg;
-    msg.utime = bot_timestamp_now();
-    msg.mean[0] = s->latest_pose->pos[0];
-    msg.mean[1] = s->latest_pose->pos[1];
-
-    double rpy[3];
-    bot_quat_to_roll_pitch_yaw(s->latest_pose->orientation, rpy);
-
-    msg.mean[2] = rpy[2];
-
-    double v = 0.01;
-    msg.variance[0] = v;
-    msg.variance[1] = v;
-    msg.variance[2] = bot_to_radians(0.1);
-    ripl_localize_reinitialize_cmd_t_publish(s->lcm, LOCALIZE_REINITIALIZE_CHANNEL, &msg);
 }
 
 //message handlers
@@ -617,7 +595,7 @@ int send_topology(state_t *s){
 
 int send_elevator_list(state_t *s){
     if(s->elevator_list !=NULL){
-        ripl_elevator_list_t_publish(s->lcm,"FINAL_ELEVATOR_LIST", s->elevator_list);
+        ripl_elevator_node_list_t_publish(s->lcm,"FINAL_ELEVATOR_LIST", s->elevator_list);
         return 0;
     }
     return 1;
@@ -748,16 +726,16 @@ void lcm_self_tagged_places_handler(const lcm_recv_buf_t *rbuf __attribute__((un
 
 void lcm_elevator_list_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)),
 			       const char *channel __attribute__((unused)),
-			       const ripl_elevator_list_t *msg,
+			       const ripl_elevator_node_list_t *msg,
 			       void *user)
 {
     fprintf(stderr,"Elevator-list received\n");
 
     state_t *s = (state_t *) user;
     if(s->elevator_list !=NULL){
-        ripl_elevator_list_t_destroy(s->elevator_list);
+        ripl_elevator_node_list_t_destroy(s->elevator_list);
     }
-    s->elevator_list = ripl_elevator_list_t_copy(msg);
+    s->elevator_list = ripl_elevator_node_list_t_copy(msg);
 
     int channellen = strlen(channel);
     int64_t mem_sz = sizeof(lcm_eventlog_event_t) + channellen + 1 + rbuf->data_size;
@@ -779,17 +757,6 @@ void lcm_elevator_list_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)
     if(0 != lcm_eventlog_write_event(s->write_log, le)) {
         fprintf(stderr, "Error saving Elevators\n");
     }
-}
-
-void lcm_localize_reinitialize_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)), const char *channel __attribute__((unused)), const ripl_localize_reinitialize_cmd_t *msg,
-				       void *user)
-{
-    state_t *s = (state_t *) user;
-    /*fprintf(stderr, "Reinitialization Message Received\n");
-      if(reinit_msg !=NULL){
-      ripl_localize_reinitialize_cmd_t_destroy(reinit_msg);
-      }
-      reinit_msg = ripl_localize_reinitialize_cmd_t_copy(msg);  */
 }
 
 static void pose_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)), const char * channel __attribute__((unused)),
@@ -899,11 +866,7 @@ void subscribe_messages(state_t *s){
     ripl_tagged_node_list_t_subscribe(s->lcm, "TAGGED_NODES", lcm_tagged_places_handler, s);
 
     //-Not handled-yet
-    ripl_elevator_list_t_subscribe(s->lcm, "ELEVATOR_LIST", lcm_elevator_list_handler, s);
-
-    //-Not handled-yet
-    ripl_localize_reinitialize_cmd_t_subscribe(s->lcm, LOCALIZE_REINITIALIZE_CHANNEL,
-                                                lcm_localize_reinitialize_handler, s);
+    ripl_elevator_node_list_t_subscribe(s->lcm, "ELEVATOR_LIST", lcm_elevator_list_handler, s);
 
 
     bot_core_pose_t_subscribe(s->lcm, POSE_CHANNEL, pose_handler, s);
@@ -1255,12 +1218,12 @@ int main(int argc, char *argv[])
                 elevator_event = event;
 
                 if(s->elevator_list !=NULL){
-                    ripl_elevator_list_t_destroy(s->elevator_list);
+                    ripl_elevator_node_list_t_destroy(s->elevator_list);
                 }
-                s->elevator_list = calloc(1,sizeof(ripl_elevator_list_t));
+                s->elevator_list = calloc(1,sizeof(ripl_elevator_node_list_t));
 
                 //memset (s->multi_msg), 0, sizeof (ripl_multi_gridmap_t));
-                decode_status =   ripl_elevator_list_t_decode (event->data, 0, event->datalen, s->elevator_list);
+                decode_status =   ripl_elevator_node_list_t_decode (event->data, 0, event->datalen, s->elevator_list);
                 if (decode_status < 0)
                     fprintf (stderr, "Error %d decoding message\n", decode_status);
                 else{

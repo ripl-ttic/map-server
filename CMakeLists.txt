@@ -4,13 +4,6 @@ cmake_minimum_required(VERSION 2.6.0)
 set(POD_NAME mapserver)
 include(cmake/pods.cmake)
 
-# automatically build LCM types.  This also defines a number of CMake
-# variables, see cmake/lcmtypes.cmake for details
-#include(cmake/lcmtypes.cmake)
-#lcmtypes_build()
-
-#include_directories(${LCMTYPES_INCLUDE_DIRS})
-
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(GLIB2 REQUIRED glib-2.0)

@@ -15,7 +15,6 @@
 #include <bot_core/bot_core.h>
 #include <bot_frames/bot_frames.h>
 
-//#include "map3d_interface.h"
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 #include <opencv/cxcore.h>
@@ -26,7 +25,6 @@
 #include <lcmtypes/hr_lcmtypes.h>
 #include <lcmtypes/obstacle_detector_lcmtypes.h>
 #include <lcmtypes/map_lcmtypes.h>
-#include <hr_lcmtypes/lcm_channel_names.h>
 
 #define DIV_PER_METER 10
 #define PUBLISH_RATE 1
@@ -869,7 +867,7 @@ void subscribe_messages(state_t *s){
     ripl_elevator_node_list_t_subscribe(s->lcm, "ELEVATOR_LIST", lcm_elevator_list_handler, s);
 
 
-    bot_core_pose_t_subscribe(s->lcm, POSE_CHANNEL, pose_handler, s);
+    bot_core_pose_t_subscribe(s->lcm, "POSE", pose_handler, s);
 
 
     //add the other handlers - these should include the new portal messages and the place node messages

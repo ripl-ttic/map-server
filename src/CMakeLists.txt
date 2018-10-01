@@ -1,12 +1,14 @@
 add_definitions(
 #    -ggdb3
     -std=gnu99
-    )
+)
 
 include_directories(
     ${GLIB2_INCLUDE_DIRS}
     ${GTK2_INCLUDE_DIRS}
-    )
+)
+
+add_executable(map-server mapserver.c)
 
 pods_use_pkg_config_packages(map-server
     gthread-2.0

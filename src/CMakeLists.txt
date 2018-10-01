@@ -11,8 +11,7 @@ include_directories(
 pods_install_headers(map3d_interface.h map3d.h DESTINATION interfaces)
 
 set(map3d_interface_sources
-    map3d_interface.c
-    )
+    map3d_interface.c)
 
 add_library(map3d_interface SHARED ${map3d_interface_sources})
 pods_install_libraries(map3d_interface)

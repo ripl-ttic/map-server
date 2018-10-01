@@ -8,7 +8,7 @@ include_directories(
     ${GTK2_INCLUDE_DIRS}
     )
 
-pods_use_pkg_config_packages(mapserver
+pods_use_pkg_config_packages(map-server
     gthread-2.0
     lcm
     bot2-core

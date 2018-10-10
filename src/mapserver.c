@@ -36,13 +36,13 @@ typedef struct
     lcm_eventlog_t *read_log;
     lcm_eventlog_t *write_log;
     int mode;
-    ripl_multi_gridmap_t *multi_msg;
+    gmlcm_multi_gridmap_t *multi_msg;
     maplcm_tagged_node_list_t *tagged_places;
-    ripl_gridmap_t *single_map;
+    gmlcm_gridmap_t *single_map;
     maplcm_elevator_node_list_t *elevator_list;
     maplcm_topology_t *topology_list;
     obs_rect_list_t *sim_rects;
-    //ripl_gridmap_t **multi_maps;
+    //gmlcm_gridmap_t **multi_maps;
     int verbose;
     int preloaded_m_map;
     int slam_m_map;
@@ -112,7 +112,7 @@ int get_floor_ind(state_t *s, int req_floor_no){
     return -1;
 }
 
-ripl_floor_gridmap_t* get_floor_map(state_t *s, int req_floor_no){
+gmlcm_floor_gridmap_t* get_floor_map(state_t *s, int req_floor_no){
     if(s->multi_msg !=NULL){
         int no_floors = s->multi_msg->no_floors;
         for(int i=0; i< no_floors; i++){
@@ -124,7 +124,7 @@ ripl_floor_gridmap_t* get_floor_map(state_t *s, int req_floor_no){
     return NULL;
 }
 
-ripl_gridmap_t* get_gridmap(state_t *s, int req_floor_no){
+gmlcm_gridmap_t* get_gridmap(state_t *s, int req_floor_no){
     if(s->multi_msg !=NULL){
         int no_floors = s->multi_msg->no_floors;
         for(int i=0; i< no_floors; i++){
@@ -139,9 +139,9 @@ ripl_gridmap_t* get_gridmap(state_t *s, int req_floor_no){
 //send the floor map
 void send_lcm_floor_map(char *requesting_prog, int floor_no, state_t *s){
     if(s->multi_msg !=NULL){
-        ripl_floor_gridmap_t *fl_map = get_floor_map(s,floor_no);
+        gmlcm_floor_gridmap_t *fl_map = get_floor_map(s,floor_no);
         if(fl_map !=NULL){
-            ripl_floor_gridmap_t_publish(s->lcm, "FMAP_SERVER", fl_map);
+            gmlcm_floor_gridmap_t_publish(s->lcm, "FMAP_SERVER", fl_map);
             send_sim_rects_for_floor(s);
         }
         else{
@@ -154,9 +154,9 @@ void send_lcm_floor_map(char *requesting_prog, int floor_no, state_t *s){
 //send the floor map
 void send_specific_lcm_floor_map(char *requesting_prog, int floor_no, state_t *s){
     if(s->multi_msg !=NULL){
-        ripl_floor_gridmap_t *fl_map = get_floor_map(s,floor_no);
+        gmlcm_floor_gridmap_t *fl_map = get_floor_map(s,floor_no);
         if(fl_map !=NULL){
-            ripl_floor_gridmap_t_publish(s->lcm, "SFMAP_SERVER", fl_map);
+            gmlcm_floor_gridmap_t_publish(s->lcm, "SFMAP_SERVER", fl_map);
         }
         else{
             fprintf(stderr, "Error - Could not find map for the floor\n");
@@ -167,9 +167,9 @@ void send_specific_lcm_floor_map(char *requesting_prog, int floor_no, state_t *s
 
 void send_lcm_map(char *requesting_prog, state_t *s, int floor_no){
     if(s->multi_msg !=NULL){
-        ripl_gridmap_t *gmap = get_gridmap(s,floor_no);
+        gmlcm_gridmap_t *gmap = get_gridmap(s,floor_no);
         if(gmap !=NULL){
-            ripl_gridmap_t_publish(s->lcm, "MAP_SERVER", gmap);
+            gmlcm_gridmap_t_publish(s->lcm, "MAP_SERVER", gmap);
             send_sim_rects_for_floor(s);
         }
         else{
@@ -180,7 +180,7 @@ void send_lcm_map(char *requesting_prog, state_t *s, int floor_no){
 }
 
 //message handlers
-void gridmap_handler(const lcm_recv_buf_t *rbuf, const char *channel, const ripl_gridmap_t *msg, void *user)
+void gridmap_handler(const lcm_recv_buf_t *rbuf, const char *channel, const gmlcm_gridmap_t *msg, void *user)
 {
     state_t *s = (state_t *) user;
     /*
@@ -433,7 +433,7 @@ void sim_rect_handler(const lcm_recv_buf_t *rbuf, const char *channel,
 
 
 void multi_gridmap_handler(const lcm_recv_buf_t *rbuf, const char *channel,
-                           const ripl_multi_gridmap_t *msg, void *user)
+                           const gmlcm_multi_gridmap_t *msg, void *user)
 {
     state_t *s = (state_t *) user;
 
@@ -447,9 +447,9 @@ void multi_gridmap_handler(const lcm_recv_buf_t *rbuf, const char *channel,
 
     if(s->mode == 1 || s->mode == 2){
         if(s->multi_msg != NULL){
-            ripl_multi_gridmap_t_destroy(s->multi_msg);
+            gmlcm_multi_gridmap_t_destroy(s->multi_msg);
         }
-        s->multi_msg = ripl_multi_gridmap_t_copy(msg);
+        s->multi_msg = gmlcm_multi_gridmap_t_copy(msg);
         fprintf(stdout,"Received Multi-floor Map\n");
 
         //writing to file
@@ -526,7 +526,7 @@ void lcm_mmap_request_handler(const lcm_recv_buf_t *rbuf __attribute__((unused))
     char* requester = msg->requesting_prog;
     fprintf(stderr,"Requested Multi Map %s \n",requester);
     if(s->multi_msg !=NULL){
-        ripl_multi_gridmap_t_publish(s->lcm,"MMAP_SERVER", s->multi_msg);
+        gmlcm_multi_gridmap_t_publish(s->lcm,"MMAP_SERVER", s->multi_msg);
     }
     else{
         fprintf(stderr,"No Multiple Map loaded - Unable to send");
@@ -873,13 +873,13 @@ void subscribe_messages(state_t *s){
     //add the other handlers - these should include the new portal messages and the place node messages
 
     if(s->mode == 1 || s->mode == 2){   //maps being published by isam slam
-        ripl_gridmap_t_subscribe(s->lcm, "FINAL_SLAM", gridmap_handler, s);
+        gmlcm_gridmap_t_subscribe(s->lcm, "FINAL_SLAM", gridmap_handler, s);
         //if we are to save the latest - then we should also subscribe to the full stream
         if(s->latest){
-            ripl_multi_gridmap_t_subscribe(s->lcm, "MULTI_FLOOR_MAPS", multi_gridmap_handler, s);
+            gmlcm_multi_gridmap_t_subscribe(s->lcm, "MULTI_FLOOR_MAPS", multi_gridmap_handler, s);
         }
         //subsribes to the final slam maps only
-        ripl_multi_gridmap_t_subscribe(s->lcm, "FINAL_MULTI_SLAM", multi_gridmap_handler, s);
+        gmlcm_multi_gridmap_t_subscribe(s->lcm, "FINAL_MULTI_SLAM", multi_gridmap_handler, s);
     }
 
     //Might be deprected - delete if not used
@@ -1014,8 +1014,8 @@ int main(int argc, char *argv[])
 
     fprintf(stdout, " Map Path : %s\n", full_path);
 
-    //ripl_multi_gridmap_t *multi_msg = NULL;
-    //ripl_gridmap_t *to_pub = NULL;
+    //gmlcm_multi_gridmap_t *multi_msg = NULL;
+    //gmlcm_gridmap_t *to_pub = NULL;
 
     s->lcm = bot_lcm_get_global(NULL);
     s->multi_msg = NULL;
@@ -1030,8 +1030,8 @@ int main(int argc, char *argv[])
     if(s->mode == 0 || s->mode == 2){
         s->read_log = lcm_eventlog_create(full_path, "r");
 
-        s->single_map = calloc(1, sizeof(ripl_gridmap_t));
-        s->multi_msg = calloc(1,sizeof(ripl_multi_gridmap_t));
+        s->single_map = calloc(1, sizeof(gmlcm_gridmap_t));
+        s->multi_msg = calloc(1,sizeof(gmlcm_multi_gridmap_t));
 
         if (!s->read_log) {
             fprintf (stderr, "Unable to open source logfile for reading %s\n", full_path);
@@ -1120,8 +1120,8 @@ int main(int argc, char *argv[])
                     lcm_eventlog_free_event (slam_event);
                 }
                 slam_event = event;
-                //memset (s->multi_msg), 0, sizeof (ripl_multi_gridmap_t));
-                decode_status =  ripl_multi_gridmap_t_decode (event->data, 0, event->datalen, s->multi_msg);
+                //memset (s->multi_msg), 0, sizeof (gmlcm_multi_gridmap_t));
+                decode_status =  gmlcm_multi_gridmap_t_decode (event->data, 0, event->datalen, s->multi_msg);
                 if (decode_status < 0)
                     fprintf (stderr, "Error %d decoding message\n", decode_status);
                 else
@@ -1139,7 +1139,7 @@ int main(int argc, char *argv[])
                 }
                 s->sim_rects = calloc(1,sizeof(obs_rect_list_t));
 
-                //memset (s->multi_msg), 0, sizeof (ripl_multi_gridmap_t));
+                //memset (s->multi_msg), 0, sizeof (gmlcm_multi_gridmap_t));
                 decode_status = obs_rect_list_t_decode (event->data, 0, event->datalen, s->sim_rects);
                 if (decode_status < 0)
                     fprintf (stderr, "Error %d decoding message\n", decode_status);
@@ -1154,8 +1154,8 @@ int main(int argc, char *argv[])
                 }
                 final_slam_event = event;
 
-                //memset (s->multi_msg), 0, sizeof (ripl_multi_gridmap_t));
-                decode_status =  ripl_multi_gridmap_t_decode (event->data, 0, event->datalen, s->multi_msg);
+                //memset (s->multi_msg), 0, sizeof (gmlcm_multi_gridmap_t));
+                decode_status =  gmlcm_multi_gridmap_t_decode (event->data, 0, event->datalen, s->multi_msg);
                 if (decode_status < 0)
                     fprintf (stderr, "Error %d decoding message\n", decode_status);
                 else{
@@ -1177,7 +1177,7 @@ int main(int argc, char *argv[])
                 }
                 s->tagged_places = calloc(1,sizeof(maplcm_tagged_node_list_t));
 
-                //memset (s->multi_msg), 0, sizeof (ripl_multi_gridmap_t));
+                //memset (s->multi_msg), 0, sizeof (gmlcm_multi_gridmap_t));
                 decode_status =   maplcm_tagged_node_list_t_decode (event->data, 0, event->datalen, s->tagged_places);
                 if (decode_status < 0)
                     fprintf (stderr, "Error %d decoding message\n", decode_status);
@@ -1199,7 +1199,7 @@ int main(int argc, char *argv[])
 
                 s->topology_list = calloc(1,sizeof(maplcm_topology_t));
 
-                //memset (s->multi_msg), 0, sizeof (ripl_multi_gridmap_t));
+                //memset (s->multi_msg), 0, sizeof (gmlcm_multi_gridmap_t));
                 decode_status =   maplcm_topology_t_decode (event->data, 0, event->datalen, s->topology_list);
                 if (decode_status < 0)
                     fprintf (stderr, "Error %d decoding message\n", decode_status);
@@ -1220,7 +1220,7 @@ int main(int argc, char *argv[])
                 }
                 s->elevator_list = calloc(1,sizeof(maplcm_elevator_node_list_t));
 
-                //memset (s->multi_msg), 0, sizeof (ripl_multi_gridmap_t));
+                //memset (s->multi_msg), 0, sizeof (gmlcm_multi_gridmap_t));
                 decode_status =   maplcm_elevator_node_list_t_decode (event->data, 0, event->datalen, s->elevator_list);
                 if (decode_status < 0)
                     fprintf (stderr, "Error %d decoding message\n", decode_status);
@@ -1275,7 +1275,7 @@ int main(int argc, char *argv[])
             }
 
             fprintf(stdout, "Loaded Map - Publishing Latest \n");
-            ripl_multi_gridmap_t_publish(s->lcm,"MMAP_SERVER", s->multi_msg);
+            gmlcm_multi_gridmap_t_publish(s->lcm,"MMAP_SERVER", s->multi_msg);
             send_lcm_map("Floor Change", s, s->current_floor_no);
             send_lcm_floor_map("Floor Change, current_floor_no",s->current_floor_no, s);
             send_current_floor_status(s);
@@ -1360,7 +1360,7 @@ int main(int argc, char *argv[])
     free(s->multi_msg);
     free(s->single_map);
 
-    //ripl_multi_gridmap_t_decode_cleanup (&(s->multi_msg));
+    //gmlcm_multi_gridmap_t_decode_cleanup (&(s->multi_msg));
     //now should have the lcm handling here
 
     return 0;

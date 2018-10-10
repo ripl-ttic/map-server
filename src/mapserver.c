@@ -37,10 +37,10 @@ typedef struct
     lcm_eventlog_t *write_log;
     int mode;
     ripl_multi_gridmap_t *multi_msg;
-    ripl_tagged_node_list_t *tagged_places;
+    maplcm_tagged_node_list_t *tagged_places;
     ripl_gridmap_t *single_map;
-    ripl_elevator_node_list_t *elevator_list;
-    ripl_topology_t *topology_list;
+    maplcm_elevator_node_list_t *elevator_list;
+    maplcm_topology_t *topology_list;
     obs_rect_list_t *sim_rects;
     //ripl_gridmap_t **multi_maps;
     int verbose;
@@ -59,7 +59,7 @@ typedef struct
 
 int send_sim_rects_for_floor(state_t *s){
     if(s->sim_rects !=NULL){
-        //ripl_topology_t_publish(s->lcm,"MAP_SERVER_TOPOLOGY", s->topology_list);
+        //maplcm_topology_t_publish(s->lcm,"MAP_SERVER_TOPOLOGY", s->topology_list);
         //send for just the correct floor
         obs_rect_list_t msg;
 
@@ -189,22 +189,22 @@ void gridmap_handler(const lcm_recv_buf_t *rbuf, const char *channel, const ripl
 }
 
 void place_update_handler(const lcm_recv_buf_t *rbuf, const char *channel,
-                          const ripl_place_node_t *msg, void *user)
+                          const maplcm_place_node_t *msg, void *user)
 {
     state_t *s = (state_t *) user;
     fprintf(stderr, "Received tagged place\n");
     if(s->topology_list == NULL){
-        s->topology_list = (ripl_topology_t *)calloc(1, sizeof(ripl_topology_t));
+        s->topology_list = (maplcm_topology_t *)calloc(1, sizeof(maplcm_topology_t));
         s->topology_list->place_list.place_count = 1;
 
-        s->topology_list->place_list.trajectory = (ripl_place_node_t *) calloc(1, sizeof(ripl_place_node_t));
+        s->topology_list->place_list.trajectory = (maplcm_place_node_t *) calloc(1, sizeof(maplcm_place_node_t));
         //not sure if this is the way to copy it
-        memcpy(&s->topology_list->place_list.trajectory[0], msg, sizeof(ripl_place_node_t));
+        memcpy(&s->topology_list->place_list.trajectory[0], msg, sizeof(maplcm_place_node_t));
         //s->tagged_places->places[0]
     }
     else{
-        s->topology_list->place_list.trajectory = (ripl_place_node_t *) realloc(s->topology_list->place_list.trajectory, (s->topology_list->place_list.place_count + 1) * sizeof(ripl_place_node_t));
-        memcpy(&s->topology_list->place_list.trajectory[s->topology_list->place_list.place_count], msg, sizeof(ripl_place_node_t));
+        s->topology_list->place_list.trajectory = (maplcm_place_node_t *) realloc(s->topology_list->place_list.trajectory, (s->topology_list->place_list.place_count + 1) * sizeof(maplcm_place_node_t));
+        memcpy(&s->topology_list->place_list.trajectory[s->topology_list->place_list.place_count], msg, sizeof(maplcm_place_node_t));
         s->topology_list->place_list.place_count++;
 
         fprintf (stdout, "place count = %d\n", s->topology_list->place_list.place_count);
@@ -219,26 +219,26 @@ void place_update_handler(const lcm_recv_buf_t *rbuf, const char *channel,
     }
 
     if(s->topology_list)
-        ripl_topology_t_publish(s->lcm, "TOPOLOGY" , s->topology_list);
+        maplcm_topology_t_publish(s->lcm, "TOPOLOGY" , s->topology_list);
 }
 
 void portal_update_handler(const lcm_recv_buf_t *rbuf, const char *channel,
-                           const ripl_portal_node_t *msg, void *user)
+                           const maplcm_portal_node_t *msg, void *user)
 {
     state_t *s = (state_t *) user;
     fprintf(stderr, "Received portal\n");
     if(s->topology_list == NULL){
-        s->topology_list = (ripl_topology_t *)calloc(1, sizeof(ripl_topology_t));
+        s->topology_list = (maplcm_topology_t *)calloc(1, sizeof(maplcm_topology_t));
         s->topology_list->portal_list.no_of_portals = 1;
 
-        s->topology_list->portal_list.portals = (ripl_portal_node_t *) calloc(1, sizeof(ripl_portal_node_t));
+        s->topology_list->portal_list.portals = (maplcm_portal_node_t *) calloc(1, sizeof(maplcm_portal_node_t));
         //not sure if this is the way to copy it
-        memcpy(&s->topology_list->portal_list.portals[0], msg, sizeof(ripl_portal_node_t));
+        memcpy(&s->topology_list->portal_list.portals[0], msg, sizeof(maplcm_portal_node_t));
         //s->tagged_places->places[0]
     }
     else{
-        s->topology_list->portal_list.portals = (ripl_portal_node_t *) realloc(s->topology_list->portal_list.portals, (s->topology_list->portal_list.no_of_portals + 1) * sizeof(ripl_portal_node_t));
-        memcpy(&s->topology_list->portal_list.portals[s->topology_list->portal_list.no_of_portals], msg, sizeof(ripl_portal_node_t));
+        s->topology_list->portal_list.portals = (maplcm_portal_node_t *) realloc(s->topology_list->portal_list.portals, (s->topology_list->portal_list.no_of_portals + 1) * sizeof(maplcm_portal_node_t));
+        memcpy(&s->topology_list->portal_list.portals[s->topology_list->portal_list.no_of_portals], msg, sizeof(maplcm_portal_node_t));
         s->topology_list->portal_list.no_of_portals++;
 
         for(int i=0; i < s->topology_list->portal_list.no_of_portals; i++){
@@ -247,12 +247,12 @@ void portal_update_handler(const lcm_recv_buf_t *rbuf, const char *channel,
     }
 
     if(s->topology_list)
-        ripl_topology_t_publish(s->lcm, "TOPOLOGY" , s->topology_list);
+        maplcm_topology_t_publish(s->lcm, "TOPOLOGY" , s->topology_list);
 }
 
 
 void topology_handler(const lcm_recv_buf_t *rbuf, const char *channel,
-                      const ripl_topology_t *msg, void *user)
+                      const maplcm_topology_t *msg, void *user)
 {
     state_t *s = (state_t *) user;
 
@@ -267,7 +267,7 @@ void topology_handler(const lcm_recv_buf_t *rbuf, const char *channel,
 
     if(s->mode == 1 || s->mode == 2){
         if(0 && s->topology_list != NULL){
-            ripl_topology_t_destroy(s->topology_list);
+            maplcm_topology_t_destroy(s->topology_list);
             s->topology_list = NULL;
         }
 
@@ -309,7 +309,7 @@ void topology_handler(const lcm_recv_buf_t *rbuf, const char *channel,
             msg->place_list.trajectory[i].theta = rpy_global[2];
         }
 
-        s->topology_list = ripl_topology_t_copy(msg);
+        s->topology_list = maplcm_topology_t_copy(msg);
         fprintf(stderr,"Saving\n");
 
 
@@ -485,7 +485,7 @@ void multi_gridmap_handler(const lcm_recv_buf_t *rbuf, const char *channel,
 
 void lcm_map_request_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)),
 			     const char *channel __attribute__((unused)),
-			     const ripl_map_request_msg_t *msg,
+			     const maplcm_map_request_msg_t *msg,
 			     void *user)
 {
     state_t *s = (state_t *) user;
@@ -496,7 +496,7 @@ void lcm_map_request_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)),
 
 void lcm_floor_map_request_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)),
                                    const char *channel __attribute__((unused)),
-                                   const ripl_map_request_msg_t *msg,
+                                   const maplcm_map_request_msg_t *msg,
                                    void *user)
 {
     state_t *s = (state_t *) user;
@@ -508,7 +508,7 @@ void lcm_floor_map_request_handler(const lcm_recv_buf_t *rbuf __attribute__((unu
 //request for a specific floor map
 void lcm_floor_specific_map_request_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)),
                                             const char *channel __attribute__((unused)),
-                                            const ripl_map_request_msg_t *msg,
+                                            const maplcm_map_request_msg_t *msg,
                                             void *user)
 {
     state_t *s = (state_t *) user;
@@ -519,7 +519,7 @@ void lcm_floor_specific_map_request_handler(const lcm_recv_buf_t *rbuf __attribu
 
 void lcm_mmap_request_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)),
 			      const char *channel __attribute__((unused)),
-			      const ripl_map_request_msg_t *msg,
+			      const maplcm_map_request_msg_t *msg,
 			      void *user)
 {
     state_t *s = (state_t *) user;
@@ -534,7 +534,7 @@ void lcm_mmap_request_handler(const lcm_recv_buf_t *rbuf __attribute__((unused))
 }
 
 void floor_change_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)), const char * channel __attribute__((unused)),
-                          const ripl_floor_change_msg_t * msg,
+                          const maplcm_floor_change_msg_t * msg,
                           void * user  __attribute__((unused)))
 {
     state_t *s = (state_t *) user;
@@ -575,7 +575,7 @@ void floor_change_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)), co
 int send_tagged_places(state_t *s){
 
     if(s->tagged_places !=NULL){
-        ripl_tagged_node_list_t_publish(s->lcm,"TAGGED_PLACE_LIST", s->tagged_places);
+        maplcm_tagged_node_list_t_publish(s->lcm,"TAGGED_PLACE_LIST", s->tagged_places);
         return 0;
     }
     return 1;
@@ -583,7 +583,7 @@ int send_tagged_places(state_t *s){
 
 int send_topology(state_t *s){
     if(s->topology_list != NULL){
-        ripl_topology_t_publish(s->lcm,"MAP_SERVER_TOPOLOGY", s->topology_list);
+        maplcm_topology_t_publish(s->lcm,"MAP_SERVER_TOPOLOGY", s->topology_list);
         return 0;
     }
     return 1;
@@ -593,18 +593,18 @@ int send_topology(state_t *s){
 
 int send_elevator_list(state_t *s){
     if(s->elevator_list !=NULL){
-        ripl_elevator_node_list_t_publish(s->lcm,"FINAL_ELEVATOR_LIST", s->elevator_list);
+        maplcm_elevator_node_list_t_publish(s->lcm,"FINAL_ELEVATOR_LIST", s->elevator_list);
         return 0;
     }
     return 1;
 }
 
 int send_current_floor_status(state_t *s){
-    ripl_floor_status_msg_t msg;
+    maplcm_floor_status_msg_t msg;
     msg.utime = bot_timestamp_now();
     msg.floor_ind = get_floor_ind(s, s->current_floor_no);
     msg.floor_no = s->current_floor_no;
-    ripl_floor_status_msg_t_publish(s->lcm,"CURRENT_FLOOR_STATUS",&msg);
+    maplcm_floor_status_msg_t_publish(s->lcm,"CURRENT_FLOOR_STATUS",&msg);
 
 }
 
@@ -624,7 +624,7 @@ on_publish_timer (gpointer data)
 //we need to add handling for this
 void lcm_place_request_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)),
 			       const char *channel __attribute__((unused)),
-			       const ripl_map_request_msg_t *msg,
+			       const maplcm_map_request_msg_t *msg,
 			       void *user)
 {
     state_t *s = (state_t *) user;
@@ -640,7 +640,7 @@ void lcm_place_request_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)
 //we need to add handling for this
 void lcm_topology_request_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)),
 			       const char *channel __attribute__((unused)),
-			       const ripl_map_request_msg_t *msg,
+			       const maplcm_map_request_msg_t *msg,
 			       void *user)
 {
     state_t *s = (state_t *) user;
@@ -651,7 +651,7 @@ void lcm_topology_request_handler(const lcm_recv_buf_t *rbuf __attribute__((unus
 
 void lcm_tagged_places_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)),
                                const char *channel __attribute__((unused)),
-                               const ripl_tagged_node_list_t *msg,
+                               const maplcm_tagged_node_list_t *msg,
                                void *user)
 {
     fprintf(stderr,"Received Tagged places\n");
@@ -659,9 +659,9 @@ void lcm_tagged_places_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)
     state_t *s = (state_t *) user;
 
     if(s->tagged_places !=NULL){
-        ripl_tagged_node_list_t_destroy(s->tagged_places);
+        maplcm_tagged_node_list_t_destroy(s->tagged_places);
     }
-    s->tagged_places = ripl_tagged_node_list_t_copy(msg);
+    s->tagged_places = maplcm_tagged_node_list_t_copy(msg);
 
     int channellen = strlen(channel);
     int64_t mem_sz = sizeof(lcm_eventlog_event_t) + channellen + 1 + rbuf->data_size;
@@ -688,7 +688,7 @@ void lcm_tagged_places_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)
 
 void lcm_self_tagged_places_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)),
                                     const char *channel __attribute__((unused)),
-                                    const ripl_tagged_node_list_t *msg,
+                                    const maplcm_tagged_node_list_t *msg,
                                     void *user)
 {
     fprintf(stderr,"Received Tagged places - self\n");
@@ -724,16 +724,16 @@ void lcm_self_tagged_places_handler(const lcm_recv_buf_t *rbuf __attribute__((un
 
 void lcm_elevator_list_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)),
 			       const char *channel __attribute__((unused)),
-			       const ripl_elevator_node_list_t *msg,
+			       const maplcm_elevator_node_list_t *msg,
 			       void *user)
 {
     fprintf(stderr,"Elevator-list received\n");
 
     state_t *s = (state_t *) user;
     if(s->elevator_list !=NULL){
-        ripl_elevator_node_list_t_destroy(s->elevator_list);
+        maplcm_elevator_node_list_t_destroy(s->elevator_list);
     }
-    s->elevator_list = ripl_elevator_node_list_t_copy(msg);
+    s->elevator_list = maplcm_elevator_node_list_t_copy(msg);
 
     int channellen = strlen(channel);
     int64_t mem_sz = sizeof(lcm_eventlog_event_t) + channellen + 1 + rbuf->data_size;
@@ -799,7 +799,7 @@ void speech_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)), const ch
 
 void floor_request_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)),
 			   const char *channel __attribute__((unused)),
-			   const ripl_map_request_msg_t *msg,
+			   const maplcm_map_request_msg_t *msg,
 			   void *user)
 {
     state_t *s = (state_t *) user;
@@ -811,7 +811,7 @@ void floor_request_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)),
 
 void end_of_tour_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)),
 			 const char * channel __attribute__((unused)),
-			 const ripl_tagged_node_t * msg,
+			 const maplcm_tagged_node_t * msg,
 			 void * user  __attribute__((unused)))
 {
     state_t *s = (state_t *) user;
@@ -843,28 +843,28 @@ void end_of_tour_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)),
 
 void subscribe_messages(state_t *s){
     //map requests
-    ripl_map_request_msg_t_subscribe(s->lcm,"MAP_REQUEST_CHANNEL",lcm_map_request_handler, s);
+    maplcm_map_request_msg_t_subscribe(s->lcm,"MAP_REQUEST_CHANNEL",lcm_map_request_handler, s);
 
-    ripl_map_request_msg_t_subscribe(s->lcm,"FMAP_REQUEST_CHANNEL",lcm_floor_map_request_handler, s);
+    maplcm_map_request_msg_t_subscribe(s->lcm,"FMAP_REQUEST_CHANNEL",lcm_floor_map_request_handler, s);
 
     //request a specific floor map
-    ripl_map_request_msg_t_subscribe(s->lcm,"SFMAP_REQUEST_CHANNEL",lcm_floor_specific_map_request_handler, s);
+    maplcm_map_request_msg_t_subscribe(s->lcm,"SFMAP_REQUEST_CHANNEL",lcm_floor_specific_map_request_handler, s);
 
-    ripl_map_request_msg_t_subscribe(s->lcm,"MMAP_REQUEST_CHANNEL",lcm_mmap_request_handler, s);
+    maplcm_map_request_msg_t_subscribe(s->lcm,"MMAP_REQUEST_CHANNEL",lcm_mmap_request_handler, s);
 
-    ripl_map_request_msg_t_subscribe(s->lcm,"PLACE_REQUEST_CHANNEL",lcm_place_request_handler, s);
+    maplcm_map_request_msg_t_subscribe(s->lcm,"PLACE_REQUEST_CHANNEL",lcm_place_request_handler, s);
 
-    ripl_map_request_msg_t_subscribe(s->lcm,"TOPOLOGY_REQUEST",lcm_topology_request_handler, s);
+    maplcm_map_request_msg_t_subscribe(s->lcm,"TOPOLOGY_REQUEST",lcm_topology_request_handler, s);
 
 
 
     //subscription for the tagged locations
 
     //-Not handled-yet
-    ripl_tagged_node_list_t_subscribe(s->lcm, "TAGGED_NODES", lcm_tagged_places_handler, s);
+    maplcm_tagged_node_list_t_subscribe(s->lcm, "TAGGED_NODES", lcm_tagged_places_handler, s);
 
     //-Not handled-yet
-    ripl_elevator_node_list_t_subscribe(s->lcm, "ELEVATOR_LIST", lcm_elevator_list_handler, s);
+    maplcm_elevator_node_list_t_subscribe(s->lcm, "ELEVATOR_LIST", lcm_elevator_list_handler, s);
 
 
     bot_core_pose_t_subscribe(s->lcm, "POSE", pose_handler, s);
@@ -886,22 +886,22 @@ void subscribe_messages(state_t *s){
     ripl_speech_cmd_t_subscribe(s->lcm, "TAGGING_CHANNEL", speech_handler, s);
 
     //should use a different message for this
-    ripl_tagged_node_t_subscribe(s->lcm, "WHEELCHAIR_MODE", end_of_tour_handler, s);
+    maplcm_tagged_node_t_subscribe(s->lcm, "WHEELCHAIR_MODE", end_of_tour_handler, s);
 
     if(s->mode == 1 || s->mode == 2){
         obs_rect_list_t_subscribe(s->lcm,"SIM_RECTS", sim_rect_handler, s);
 
-        ripl_topology_t_subscribe(s->lcm,"TOPOLOGY", topology_handler, s);
+        maplcm_topology_t_subscribe(s->lcm,"TOPOLOGY", topology_handler, s);
 
-        //ripl_tagged_node_t_subscribe(s->lcm,"ADD_TAGGED_PLACE", place_update_handler, s);
-        ripl_place_node_t_subscribe(s->lcm,"ADD_PLACE_NODE", place_update_handler, s);
+        //maplcm_tagged_node_t_subscribe(s->lcm,"ADD_TAGGED_PLACE", place_update_handler, s);
+        maplcm_place_node_t_subscribe(s->lcm,"ADD_PLACE_NODE", place_update_handler, s);
 
-        ripl_portal_node_t_subscribe(s->lcm,"ADD_PORTAL_NODE", portal_update_handler, s);
+        maplcm_portal_node_t_subscribe(s->lcm,"ADD_PORTAL_NODE", portal_update_handler, s);
 
     }
 
-    ripl_floor_change_msg_t_subscribe(s->lcm, "FLOOR_CHANGE", floor_change_handler, s);
-    ripl_map_request_msg_t_subscribe(s->lcm, "FLOOR_STATUS_REQUEST", floor_request_handler, s); //send both the current floor and the floor map
+    maplcm_floor_change_msg_t_subscribe(s->lcm, "FLOOR_CHANGE", floor_change_handler, s);
+    maplcm_map_request_msg_t_subscribe(s->lcm, "FLOOR_STATUS_REQUEST", floor_request_handler, s); //send both the current floor and the floor map
 }
 
 static void usage(const char *name)
@@ -1173,12 +1173,12 @@ int main(int argc, char *argv[])
                 tagging_event = event;
 
                 if(s->tagged_places !=NULL){
-                    ripl_tagged_node_list_t_destroy(s->tagged_places);
+                    maplcm_tagged_node_list_t_destroy(s->tagged_places);
                 }
-                s->tagged_places = calloc(1,sizeof(ripl_tagged_node_list_t));
+                s->tagged_places = calloc(1,sizeof(maplcm_tagged_node_list_t));
 
                 //memset (s->multi_msg), 0, sizeof (ripl_multi_gridmap_t));
-                decode_status =   ripl_tagged_node_list_t_decode (event->data, 0, event->datalen, s->tagged_places);
+                decode_status =   maplcm_tagged_node_list_t_decode (event->data, 0, event->datalen, s->tagged_places);
                 if (decode_status < 0)
                     fprintf (stderr, "Error %d decoding message\n", decode_status);
                 else{
@@ -1193,14 +1193,14 @@ int main(int argc, char *argv[])
                 topology_event = event;
 
                 if(s->topology_list !=NULL){
-                    ripl_topology_t_destroy(s->topology_list);
+                    maplcm_topology_t_destroy(s->topology_list);
                     s->topology_list = NULL;
                 }
 
-                s->topology_list = calloc(1,sizeof(ripl_topology_t));
+                s->topology_list = calloc(1,sizeof(maplcm_topology_t));
 
                 //memset (s->multi_msg), 0, sizeof (ripl_multi_gridmap_t));
-                decode_status =   ripl_topology_t_decode (event->data, 0, event->datalen, s->topology_list);
+                decode_status =   maplcm_topology_t_decode (event->data, 0, event->datalen, s->topology_list);
                 if (decode_status < 0)
                     fprintf (stderr, "Error %d decoding message\n", decode_status);
                 else{
@@ -1216,12 +1216,12 @@ int main(int argc, char *argv[])
                 elevator_event = event;
 
                 if(s->elevator_list !=NULL){
-                    ripl_elevator_node_list_t_destroy(s->elevator_list);
+                    maplcm_elevator_node_list_t_destroy(s->elevator_list);
                 }
-                s->elevator_list = calloc(1,sizeof(ripl_elevator_node_list_t));
+                s->elevator_list = calloc(1,sizeof(maplcm_elevator_node_list_t));
 
                 //memset (s->multi_msg), 0, sizeof (ripl_multi_gridmap_t));
-                decode_status =   ripl_elevator_node_list_t_decode (event->data, 0, event->datalen, s->elevator_list);
+                decode_status =   maplcm_elevator_node_list_t_decode (event->data, 0, event->datalen, s->elevator_list);
                 if (decode_status < 0)
                     fprintf (stderr, "Error %d decoding message\n", decode_status);
                 else{

@@ -843,16 +843,16 @@ void end_of_tour_handler(const lcm_recv_buf_t *rbuf __attribute__((unused)),
 
 void subscribe_messages(state_t *s){
     //map requests
-    maplcm_map_request_msg_t_subscribe(s->lcm,"MAP_REQUEST_CHANNEL",lcm_map_request_handler, s);
+    maplcm_map_request_msg_t_subscribe(s->lcm,"MAP_REQUEST",lcm_map_request_handler, s);
 
-    maplcm_map_request_msg_t_subscribe(s->lcm,"FMAP_REQUEST_CHANNEL",lcm_floor_map_request_handler, s);
+    maplcm_map_request_msg_t_subscribe(s->lcm,"FMAP_REQUEST",lcm_floor_map_request_handler, s);
 
     //request a specific floor map
-    maplcm_map_request_msg_t_subscribe(s->lcm,"SFMAP_REQUEST_CHANNEL",lcm_floor_specific_map_request_handler, s);
+    maplcm_map_request_msg_t_subscribe(s->lcm,"SFMAP_REQUEST",lcm_floor_specific_map_request_handler, s);
 
-    maplcm_map_request_msg_t_subscribe(s->lcm,"MMAP_REQUEST_CHANNEL",lcm_mmap_request_handler, s);
+    maplcm_map_request_msg_t_subscribe(s->lcm,"MMAP_REQUEST",lcm_mmap_request_handler, s);
 
-    maplcm_map_request_msg_t_subscribe(s->lcm,"PLACE_REQUEST_CHANNEL",lcm_place_request_handler, s);
+    maplcm_map_request_msg_t_subscribe(s->lcm,"PLACE_REQUEST",lcm_place_request_handler, s);
 
     maplcm_map_request_msg_t_subscribe(s->lcm,"TOPOLOGY_REQUEST",lcm_topology_request_handler, s);
 

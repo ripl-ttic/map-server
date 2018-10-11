@@ -22,7 +22,7 @@
 #include <path_utils/path_util.h>
 
 #include <lcmtypes/gridmap_lcmtypes.h>
-#include <lcmtypes/hr_lcmtypes.h>
+#include <lcmtypes/ripl_general_lcmtypes.h>
 #include <lcmtypes/obstacle_detector_lcmtypes.h>
 #include <lcmtypes/map_lcmtypes.h>
 

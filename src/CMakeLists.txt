@@ -15,7 +15,7 @@ pods_use_pkg_config_packages(map-server
     lcm
     bot2-core
     bot2-frames
-    lcmtypes_hr-lcmtypes
+    lcmtypes_ripl-general
     lcmtypes_obstacle-detector
     lcmtypes_map
     lcmtypes_gridmap
